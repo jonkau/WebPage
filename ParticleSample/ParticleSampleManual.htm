@@ -1,0 +1,178 @@
+<html>
+<head>
+<meta content="text/html; charset=utf-8"/>
+<style type="text/css">
+ /* Style Definitions */
+ body
+	{margin-top:0;
+	margin-right:0;
+	background-color:#FFFFFF;
+	margin-bottom:20px;
+	margin-left:20px;
+	line-height:115%;
+	font-size:11.0pt;
+	font-family:"Calibri","sans-serif";}
+h1
+	{
+	margin-top:24.0pt;
+	margin-right:0in;
+	margin-bottom:0in;
+	margin-left:0in;
+	margin-bottom:.0001pt;
+	line-height:115%;
+	page-break-after:avoid;
+	font-size:14.0pt;
+	font-family:"Cambria","serif";
+	color:#365F91;}
+h2
+	{
+	margin-top:10.0pt;
+	margin-right:0in;
+	margin-bottom:0in;
+	margin-left:0in;
+	margin-bottom:.0001pt;
+	line-height:115%;
+	page-break-after:avoid;
+	font-size:13.0pt;
+	font-family:"Cambria","serif";
+	color:#4F81BD;}
+.pictureHeading
+    {
+    font-size:10.0pt;
+    font-style: italic;
+    text-align: center;}
+a:visited,
+a:link
+    {
+    color:#0066CC;
+    }
+a:hover
+    {
+    text-decoration:none;
+    }
+    
+</style>
+
+</head>
+
+<body lang="en-us">
+
+<h1><a id="top">Particle Sample Application Manual</a></h1>
+<h2><img alt="Download" align="absmiddle" src="ParticleSampleManual_files/download.png" />&nbsp;Files for download</h2>
+<ul>
+<li>Executable files for download: <a target="_blank" href="ParticleSystemBin.zip">ParticleSystemBin.zip</a></li>
+<li>Source files for download: <a target="_blank" href="ParticleSystemSrc.zip">ParticleSystemSrc.zip</a></li>
+</ul>
+<h1><a>Content</a></h1>
+<ol>
+<li><a href="#Project_goal">Project goal</a></li>
+<li><a href="#Project_motivation">Project motivation</a></li>
+<li><a href="#Project_structure">Project structure</a></li>
+<li><a href="#Design">Design</a></li>
+<li><a href="#Program_usage">Program usage</a></li>
+</ol>
+<hr />
+<h1><a id="Project_goal">Project goal</a></h1>
+<p>To design and construct efficient system for Maya particles
+extraction and rendering. </p>
+<a href="#top">^ up</a>
+
+<h1><a id="Project_motivation">Project motivation</a></h1>
+<ul>
+<li>To get more familiar with Maya API.</li>
+<li>To get more familiar with Directx 10.</li>
+<li>To get more into depth of GPU general programming.</li>
+</ul>
+<a href="#top">^ up</a>
+
+<h1><a id="Project_structure">Project structure</a></h1>
+<p>Project consists of two components:</p>
+<ul>
+<li>Maya plug-in for particles data extraction from Maya system.
+Exported data is saved in XML format.</li>
+<li>Application for rendering particles. Data is loaded from
+particles XML.</li>
+</ul>
+<a href="#top">^ up</a>
+
+<h1><a id="Design">Design</a></h1>
+<p>Key features:</p>
+<ul>
+<li>Extendibility</li>
+<li>Efficiency</li>
+</ul>
+<p>Unfortunately these two features contradict each other, so
+it imposed the system design.</p>
+<p>The particle system consists of three main components: </p>
+<ul>
+<li>emitter,</li>
+<li>particle holder,</li>
+<li>force field.</li>
+</ul>
+<p>Emitter emits particles and adds them to the particle
+holder. Emitter may emit particles only to one particle holder, but particle
+holder can accept particles from several emitters. </p>
+<p>Particle holder contains particles and can be extended for
+concrete implementation (i.e. GPU or CPU based particles). </p>
+<p>Fields can be applied to particle holder through general
+field interface - IField. Field acts on every supplied particle in the particle
+holder. New fields can be implemented by extending IField interface. </p>
+<p>Particle count can get very big, thus field functions on particles
+must be very efficient. Also internal structures of particle holders concrete
+implementations may be very different, thus field must be aware of them for efficient
+performance. Considering both of the requirements, I choose to implement visitor
+pattern for field and particle holder interaction. Therefore fields are applied
+generally to particle holder, but they interact specifically with it - every field
+must implement interaction method with every particle holder implementation
+(i.e. GPU implementation and CPU implementation).</p>
+<p>CPU based particles save their data in system memory and is
+processed by CPU single thread. Particles are rendered using dynamic vertex
+buffer.</p>
+<p>GPU based particles save their data in video memory as a
+texture. GPU particles are updated using double buffering. Full screen source
+texture is rendered to another texture (render target). During render process
+particles data is modified in pixel shader. Particles are rendered using vertex
+texturing.</p>
+<table>
+<tr><td><img alt="Particle render program class design diagram" src="ParticleSampleManual_files/image001.jpg"/></td></tr>
+<tr><td class="pictureHeading">Particle render program class design diagram (using UML
+notation).</td></tr>
+</table>
+<a href="#top">^ up</a>
+
+<h1><a id="Program_usage">Program usage</a></h1>
+
+<h2>Start up</h2>
+<p>To start particle simulation just drag and drop xml file
+which is exported from MAYA using particle exporter plugin. Application
+supports GPU and CPU particle render. Select particle simulation type on program start up:</p>
+<table>
+<tr><td><img alt="Particle simulation selection form" src="ParticleSampleManual_files/image002.png"/></td></tr>
+<tr><td class="pictureHeading">Particle simulation selection form</td></tr>
+</table>
+
+<h2>Camera navigation</h2>
+<p>For rotation - hold left mouse button and move mouse in
+different directions. For moving - use dirrectional keys.</p>
+
+<h2>Functionality description</h2>
+<p>For now there are only basic functionality of two field
+types supported - gravity and radial. </p>
+<p>Life time of particles can be only random or const. </p>
+<p>Emitter supports omni or directional emission.</p>
+<table>
+<tr><td><img alt="Particles running in Maya" src="ParticleSampleManual_files/image003.jpg"/></td></tr>
+<tr><td class="pictureHeading">Particles running in Maya</td></tr>
+</table>
+<br />
+<table>
+<tr><td><img alt="Particles running in render application" src="ParticleSampleManual_files/image004.jpg"/></td></tr>
+<tr><td class="pictureHeading">Particles running in render application</td></tr>
+</table>
+<a href="#top">^ up</a>
+<hr />
+<p>&copy;2009 <i>Jonas Kaulakis</i></p>
+
+</body>
+
+</html>
